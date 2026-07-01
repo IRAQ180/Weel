@@ -66,10 +66,24 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // جلب الأسماء المرسلة من البوت وتفكيكها
     const urlParams = new URLSearchParams(window.location.search);
-    const namesParam = urlParams.get('names');
-    const names = namesParam ? namesParam.split(',') : ["أحمد", "علي"];
+    const chat_id = urlParams.get('chat_id');
+    const namesParam = urlParams.get('names'); // ستأتي على شكل الاسم|اليوزر،الاسم|اليوزر
+    
+    let names = [];
+    let current_users = [];
+
+    if (namesParam) {
+        const pairs = namesParam.split(',');
+        pairs.forEach(pair => {
+            const parts = pair.split('|');
+            names.push(parts[0]);
+            current_users.push(parts[1] || "");
+        });
+    } else {
+        names = ["أحمد", "علي"];
+        current_users = ["", ""];
+    }
 
     const canvas = document.getElementById('wheel');
     const ctx = canvas.getContext('2d');
@@ -78,7 +92,6 @@
     const slices = names.length;
     const arc = 2 * Math.PI / slices;
 
-    // الألوان الزاهية المماثلة لشكل الدولاب الدائري الملون
     const colors = ["#fbbf24", "#fb923c", "#f87171", "#f43f5e", "#c084fc", "#818cf8", "#60a5fa", "#34d399", "#4ade80", "#a3e635"];
 
     function drawWheel() {
@@ -91,7 +104,6 @@
             ctx.lineTo(center, center);
             ctx.fill();
 
-            // طباعة الاسم بشكل مائل ودائري متناسق داخل القسم الملون
             ctx.save();
             ctx.translate(center, center);
             ctx.rotate(angle + arc / 2);
@@ -108,20 +120,38 @@
     let currentRotation = 0;
     function spinWheel() {
         document.getElementById('spin-btn').disabled = true;
-        const extraDegrees = Math.floor(Math.random() * 360) + 1440; // 4 دورات كاملة على الأقل للحماس
+        const extraDegrees = Math.floor(Math.random() * 360) + 1440; 
         currentRotation += extraDegrees;
         canvas.style.transform = `rotate(${currentRotation}deg)`;
 
         setTimeout(() => {
-            // حساب الاسم الفائز بدقة بناءً على زاوية التوقف والمؤشر العلوي الاحمر
             const actualRotation = (currentRotation % 360);
             const index = Math.floor(((360 - actualRotation + 90) % 360) / (360 / slices));
-            const winner = names[index % slices];
+            const finalIndex = index % slices;
             
-            // إرسال الاسم الفائز للبوت مباشرة وإغلاق نافذة الدولاب تلقائياً
-            tg.sendData(JSON.stringify({ winner: winner }));
-            tg.close();
-        }, 4000); // مدة دوران الدولاب 4 ثوانٍ
+            const winnerName = names[finalIndex];
+            const winnerUser = current_users[finalIndex];
+
+            // إرسال طلب مخفي (API) للبوت في السيرفر ليعلن الفائز تلقائياً بالجروب
+            fetch('https://Iraqi180.pythonanywhere.com/winner', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chat_id,
+                    winner_name: winnerName,
+                    winner_user: winnerUser
+                })
+            }).then(() => {
+                tg.showAlert(`🎉 تم إرسال النتيجة فوراً للمجموعة!\n\n👤 الفائز: ${winnerName}`, () => {
+                    tg.close();
+                });
+            }).catch(() => {
+                tg.showAlert(`🎉 انتهت القرعة!\n\n👤 الفائز: ${winnerName}`, () => {
+                    tg.close();
+                });
+            });
+
+        }, 4000); 
     }
 </script>
 </body>
