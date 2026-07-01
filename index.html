@@ -81,7 +81,7 @@
             current_users.push(parts[1] || "");
         });
     } else {
-        names = ["أحمد", "علي"];
+        names = ["عراق", "أحمد"];
         current_users = ["", ""];
     }
 
@@ -108,51 +108,3 @@
             ctx.translate(center, center);
             ctx.rotate(angle + arc / 2);
             ctx.textAlign = "right";
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 14px Arial";
-            ctx.fillText(names[i], center - 20, 5);
-            ctx.restore();
-        }
-    }
-
-    drawWheel();
-
-    let currentRotation = 0;
-    function spinWheel() {
-        document.getElementById('spin-btn').disabled = true;
-        const extraDegrees = Math.floor(Math.random() * 360) + 1440; 
-        currentRotation += extraDegrees;
-        canvas.style.transform = `rotate(${currentRotation}deg)`;
-
-        setTimeout(() => {
-            const actualRotation = (currentRotation % 360);
-            const index = Math.floor(((360 - actualRotation + 90) % 360) / (360 / slices));
-            const finalIndex = index % slices;
-            
-            const winnerName = names[finalIndex];
-            const winnerUser = current_users[finalIndex];
-
-            // تحضير رابط توجيه للبوت لإرسال النتيجة تلقائياً عند الضغط
-            const botUsername = "8981280860"; // سيتم تحويله برمجياً داخل تليجرام
-            const startParam = btoa(`${chat_id}_${winnerName}_${winnerUser}`).replace(/=/g, '');
-            const shareUrl = `https://t.me/Roletalhdad_bot?start=${startParam}`; // ضع يوزر بوتك هنا بدلاً من sosiisoe_bot
-
-            tg.showPopup({
-                title: '🎉 انتهت القرعة!',
-                message: `👤 الفائز المحظوظ هو: ${winnerName}\n\nاضغط على الزر أدناه لنشر النتيجة وإرسال المنشن داخل المجموعة فوراً!`,
-                buttons: [
-                    {id: 'share', type: 'default', text: '📣 نشر النتيجة في الجروب'},
-                    {id: 'close', type: 'cancel', text: 'إغلاق'}
-                ]
-            }, function(buttonId) {
-                if (buttonId === 'share') {
-                    tg.openTelegramLink(shareUrl);
-                }
-                tg.close();
-            });
-
-        }, 4000); 
-    }
-</script>
-</body>
-</html>
