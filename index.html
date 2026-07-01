@@ -2,15 +2,20 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>دولاب الحظ</title>
-    <!-- مكتبة تليجرام الأساسية -->
+    <title>دولاب الحظ الفخم</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #e0f2fe; }
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; margin: 0; 
+            /* خلفية متحركة فخمة */
+            background: url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJ4ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6ZzR6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.gif') center/cover no-repeat; 
+        }
         .wheel-container { position: relative; width: 300px; height: 300px; }
         .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #b91c1c; z-index: 10; }
-        canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1); }
-        button { margin-top: 30px; padding: 12px 30px; font-size: 18px; font-weight: bold; color: white; background-color: #0284c7; border: none; border-radius: 25px; cursor: pointer; }
+        #wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1); background: rgba(0,0,0,0.3); border: 4px solid white; }
+        button { margin-top: 30px; padding: 15px 40px; font-size: 20px; font-weight: bold; color: white; background-color: #d97706; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -27,19 +32,11 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const namesParam = urlParams.get('names'); 
-    
-    let names = [];
-    if (namesParam) {
-        namesParam.split(',').forEach(pair => {
-            names.push(pair.split('|')[0]);
-        });
-    } else {
-        names = ["أحمد", "علي"];
-    }
+    let names = namesParam ? namesParam.split(',').map(pair => pair.split('|')[0]) : ["أحمد", "علي"];
 
     const canvas = document.getElementById('wheel');
     const ctx = canvas.getContext('2d');
-    const center = canvas.width / 2;
+    const center = 150;
     const slices = names.length;
     const arc = 2 * Math.PI / slices;
     const colors = ["#fbbf24", "#fb923c", "#f87171", "#f43f5e", "#c084fc", "#818cf8"];
@@ -48,11 +45,11 @@
         for (let i = 0; i < slices; i++) {
             ctx.fillStyle = colors[i % colors.length];
             ctx.beginPath(); ctx.moveTo(center, center);
-            ctx.arc(center, center, center, i * arc, (i + 1) * arc);
+            ctx.arc(center, center, 145, i * arc, (i + 1) * arc);
             ctx.lineTo(center, center); ctx.fill();
             ctx.save(); ctx.translate(center, center); ctx.rotate((i * arc) + arc / 2);
-            ctx.textAlign = "right"; ctx.fillStyle = "#ffffff"; ctx.font = "bold 14px Arial";
-            ctx.fillText(names[i], center - 20, 5); ctx.restore();
+            ctx.textAlign = "right"; ctx.fillStyle = "#ffffff"; ctx.font = "bold 16px Arial";
+            ctx.fillText(names[i], 120, 5); ctx.restore();
         }
     }
     drawWheel();
@@ -65,22 +62,15 @@
         canvas.style.transform = `rotate(${currentRotation}deg)`;
 
         setTimeout(() => {
-            const actualRotation = (currentRotation % 360);
-            const index = Math.floor(((360 - actualRotation + 90) % 360) / (360 / slices)) % slices;
+            const index = Math.floor(((360 - (currentRotation % 360) + 90) % 360) / (360 / slices)) % slices;
             const winnerName = names[index];
-
-            // إرسال النتيجة للبوت ليقوم بنشر التهنئة تلقائياً
-            if (tg.sendData) {
-                tg.sendData(JSON.stringify({ winner: winnerName }));
-            }
-
-            tg.showPopup({
-                title: '🎉 مبروك الفائز!',
-                message: `👤 ياحبيبي انتَ فائز: 【 ${winnerName} 】 ✨`,
-                buttons: [{id: 'close', type: 'default', text: '🔙 العودة للمجموعة'}]
-            }, function(buttonId) {
-                tg.close();
-            });
+            if (tg.sendData) tg.sendData(JSON.stringify({ winner: winnerName }));
+            
+            tg.showPopup({ 
+                title: '🎉 مبروك الفائز!', 
+                message: `👑 ياحبيبي انتَ فائز: 【 ${winnerName} 】 ✨`, 
+                buttons: [{type: 'default', text: '🔙 العودة للمجموعة'}] 
+            }, () => tg.close());
         }, 4000); 
     }
 </script>
