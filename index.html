@@ -2,56 +2,15 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دولاب الأسماء</title>
+    <title>دولاب الحظ</title>
+    <!-- مكتبة تليجرام الأساسية لإظهار الأزرار والتنبيهات -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(to bottom, #e0f2fe, #7dd3fc);
-        }
-        .wheel-container {
-            position: relative;
-            width: 300px;
-            height: 300px;
-        }
-        .pointer {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid #b91c1c;
-            z-index: 10;
-        }
-        canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1);
-        }
-        button {
-            margin-top: 30px;
-            padding: 12px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            background-color: #0284c7;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #e0f2fe; }
+        .wheel-container { position: relative; width: 300px; height: 300px; }
+        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #b91c1c; z-index: 10; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1); }
+        button { margin-top: 30px; padding: 12px 30px; font-size: 18px; font-weight: bold; color: white; background-color: #0284c7; border: none; border-radius: 25px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -74,14 +33,13 @@
     let current_users = [];
 
     if (namesParam) {
-        const pairs = namesParam.split(',');
-        pairs.forEach(pair => {
+        namesParam.split(',').forEach(pair => {
             const parts = pair.split('|');
             names.push(parts[0]);
             current_users.push(parts[1] || "");
         });
     } else {
-        names = ["عراق", "أحمد"];
+        names = ["أحمد", "علي"];
         current_users = ["", ""];
     }
 
@@ -91,20 +49,51 @@
     const center = size / 2;
     const slices = names.length;
     const arc = 2 * Math.PI / slices;
-
-    const colors = ["#fbbf24", "#fb923c", "#f87171", "#f43f5e", "#c084fc", "#818cf8", "#60a5fa", "#34d399", "#4ade80", "#a3e635"];
+    const colors = ["#fbbf24", "#fb923c", "#f87171", "#f43f5e", "#c084fc", "#818cf8"];
 
     function drawWheel() {
         for (let i = 0; i < slices; i++) {
-            const angle = i * arc;
             ctx.fillStyle = colors[i % colors.length];
-            ctx.beginPath();
-            ctx.moveTo(center, center);
-            ctx.arc(center, center, center, angle, angle + arc);
-            ctx.lineTo(center, center);
-            ctx.fill();
+            ctx.beginPath(); ctx.moveTo(center, center);
+            ctx.arc(center, center, center, i * arc, (i + 1) * arc);
+            ctx.lineTo(center, center); ctx.fill();
+            ctx.save(); ctx.translate(center, center); ctx.rotate((i * arc) + arc / 2);
+            ctx.textAlign = "right"; ctx.fillStyle = "#ffffff"; ctx.font = "bold 14px Arial";
+            ctx.fillText(names[i], center - 20, 5); ctx.restore();
+        }
+    }
+    drawWheel();
 
-            ctx.save();
-            ctx.translate(center, center);
-            ctx.rotate(angle + arc / 2);
-            ctx.textAlign = "right";
+    let currentRotation = 0;
+    function spinWheel() {
+        document.getElementById('spin-btn').disabled = true;
+        const extraDegrees = Math.floor(Math.random() * 360) + 1440; 
+        currentRotation += extraDegrees;
+        canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+        setTimeout(() => {
+            const actualRotation = (currentRotation % 360);
+            const index = Math.floor(((360 - actualRotation + 90) % 360) / (360 / slices)) % slices;
+            const winnerName = names[index];
+            const winnerUser = current_users[index];
+
+            // تحويل البيانات بشكل آمن وإرسالها لبوتك Roletalhdad_bot
+            const startParam = btoa(`${chat_id}_${winnerName}_${winnerUser}`).replace(/=/g, '');
+            const shareUrl = `https://t.me/Roletalhdad_bot?start=${startParam}`;
+
+            // التنبيه الذي سيظهر في وسط الشاشة إجبارياً بعد انتهاء الدوران
+            tg.showPopup({
+                title: '🎉 مبروك الفائز!',
+                message: `👤 الفائز: ${winnerName}\n\nاضغط على الزر لإرسال النتيجة وعمل تاغ في الجروب!`,
+                buttons: [{id: 'share', type: 'default', text: '📣 نشر النتيجة بالجروب'}]
+            }, function(buttonId) {
+                if (buttonId === 'share') {
+                    tg.openTelegramLink(shareUrl);
+                }
+                tg.close();
+            });
+        }, 4000); 
+    }
+</script>
+</body>
+</html>
