@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>دولاب الحظ</title>
-    <!-- مكتبة تليجرام الأساسية لإظهار الأزرار والتنبيهات -->
+    <!-- مكتبة تليجرام الأساسية -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #e0f2fe; }
@@ -26,27 +26,20 @@
     tg.expand();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const chat_id = urlParams.get('chat_id');
     const namesParam = urlParams.get('names'); 
     
     let names = [];
-    let current_users = [];
-
     if (namesParam) {
         namesParam.split(',').forEach(pair => {
-            const parts = pair.split('|');
-            names.push(parts[0]);
-            current_users.push(parts[1] || "");
+            names.push(pair.split('|')[0]);
         });
     } else {
         names = ["أحمد", "علي"];
-        current_users = ["", ""];
     }
 
     const canvas = document.getElementById('wheel');
     const ctx = canvas.getContext('2d');
-    const size = canvas.width;
-    const center = size / 2;
+    const center = canvas.width / 2;
     const slices = names.length;
     const arc = 2 * Math.PI / slices;
     const colors = ["#fbbf24", "#fb923c", "#f87171", "#f43f5e", "#c084fc", "#818cf8"];
@@ -75,21 +68,17 @@
             const actualRotation = (currentRotation % 360);
             const index = Math.floor(((360 - actualRotation + 90) % 360) / (360 / slices)) % slices;
             const winnerName = names[index];
-            const winnerUser = current_users[index];
 
-            // تحويل البيانات بشكل آمن وإرسالها لبوتك Roletalhdad_bot
-            const startParam = btoa(`${chat_id}_${winnerName}_${winnerUser}`).replace(/=/g, '');
-            const shareUrl = `https://t.me/Roletalhdad_bot?start=${startParam}`;
+            // إرسال النتيجة للبوت ليقوم بنشر التهنئة تلقائياً
+            if (tg.sendData) {
+                tg.sendData(JSON.stringify({ winner: winnerName }));
+            }
 
-            // التنبيه الذي سيظهر في وسط الشاشة إجبارياً بعد انتهاء الدوران
             tg.showPopup({
                 title: '🎉 مبروك الفائز!',
-                message: `👤 الفائز: ${winnerName}\n\nاضغط على الزر لإرسال النتيجة وعمل تاغ في الجروب!`,
-                buttons: [{id: 'share', type: 'default', text: '📣 نشر النتيجة بالجروب'}]
+                message: `👤 ياحبيبي انتَ فائز: 【 ${winnerName} 】 ✨`,
+                buttons: [{id: 'close', type: 'default', text: '🔙 العودة للمجموعة'}]
             }, function(buttonId) {
-                if (buttonId === 'share') {
-                    tg.openTelegramLink(shareUrl);
-                }
                 tg.close();
             });
         }, 4000); 
