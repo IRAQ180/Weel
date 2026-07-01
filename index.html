@@ -68,7 +68,7 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const chat_id = urlParams.get('chat_id');
-    const namesParam = urlParams.get('names'); // ستأتي على شكل الاسم|اليوزر،الاسم|اليوزر
+    const namesParam = urlParams.get('names'); 
     
     let names = [];
     let current_users = [];
@@ -132,23 +132,23 @@
             const winnerName = names[finalIndex];
             const winnerUser = current_users[finalIndex];
 
-            // إرسال طلب مخفي (API) للبوت في السيرفر ليعلن الفائز تلقائياً بالجروب
-            fetch('https://Iraqi180.pythonanywhere.com/winner', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chat_id,
-                    winner_name: winnerName,
-                    winner_user: winnerUser
-                })
-            }).then(() => {
-                tg.showAlert(`🎉 تم إرسال النتيجة فوراً للمجموعة!\n\n👤 الفائز: ${winnerName}`, () => {
-                    tg.close();
-                });
-            }).catch(() => {
-                tg.showAlert(`🎉 انتهت القرعة!\n\n👤 الفائز: ${winnerName}`, () => {
-                    tg.close();
-                });
+            // تحضير رابط توجيه للبوت لإرسال النتيجة تلقائياً عند الضغط
+            const botUsername = "8981280860"; // سيتم تحويله برمجياً داخل تليجرام
+            const startParam = btoa(`${chat_id}_${winnerName}_${winnerUser}`).replace(/=/g, '');
+            const shareUrl = `https://t.me/sosiisoe_bot?start=${startParam}`; // ضع يوزر بوتك هنا بدلاً من sosiisoe_bot
+
+            tg.showPopup({
+                title: '🎉 انتهت القرعة!',
+                message: `👤 الفائز المحظوظ هو: ${winnerName}\n\nاضغط على الزر أدناه لنشر النتيجة وإرسال المنشن داخل المجموعة فوراً!`,
+                buttons: [
+                    {id: 'share', type: 'default', text: '📣 نشر النتيجة في الجروب'},
+                    {id: 'close', type: 'cancel', text: 'إغلاق'}
+                ]
+            }, function(buttonId) {
+                if (buttonId === 'share') {
+                    tg.openTelegramLink(shareUrl);
+                }
+                tg.close();
             });
 
         }, 4000); 
